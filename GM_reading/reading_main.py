@@ -5,7 +5,7 @@ from pathlib import Path
 from GM_sample_images import *
 
 # Toggle this to see GUI windows (handy on a laptop; leave False on a headless Pi)
-SHOW_WINDOWS = True
+SHOW_WINDOWS = False
 
 
 # ========== UTILITY FUNCTIONS ==========
@@ -82,11 +82,15 @@ def maybe_show(title, img):
 # ========== MAIN FUNCTIONS ==========
 
 
-def calibrate_gauge(filename, zero_angle=0):
-    img = cv2.imread(filename)
-    if img is None:
-        raise FileNotFoundError(f"Could not read {filename}")
-
+def calibrate_gauge(gauge_img, zero_angle=0):
+    if isinstance(gauge_img, np.ndarray):
+        img = gauge_img.copy()
+        filename = "gauge_input"
+    else:
+        img = cv2.imread(str(gauge_img))
+        if img is None:
+            raise FileNotFoundError(f"Could not read {gauge_img}")
+        filename = gauge_img
 
     h, w = img.shape[:2]
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -242,31 +246,30 @@ def save_storyboard(panel_circle, panel_binary, panel_lines, panel_candidates, o
 # ========== MAIN ==========
 
 
-def r_main():
-    base_dir = Path(__file__).resolve().parent.parent
-    img_dir = base_dir / "GM_sample_images"
-    filename = img_dir / "GM1.png"  # <-- put your image path here
-    zero_angle = 0        # adjust if the photo is rotated; 0° = up
+def r_main(gauge_img):
+    zero_angle = 0 # adjust if the photo is rotated; 0° = up
 
 
-    calib = calibrate_gauge(str(filename), zero_angle=zero_angle)
+    calib = calibrate_gauge(gauge_img, zero_angle=zero_angle)
     if calib is None:
-        return
+        return 0
     x, y, r, tick_list, panel_circle = calib
 
 
-    img = cv2.imread(str(filename))
     value, panel_binary, panel_lines, panel_candidates = get_current_value(
-        img, x, y, r, tick_list, filename, zero_angle=zero_angle
+        gauge_img, x, y, r, tick_list, "gauge_input", zero_angle=zero_angle
     )
     if value is None:
         print("Could not determine the reading.")
-    else:
-        print(f"📊 Final reading: {value}")
+        return 0
 
 
-    save_storyboard(panel_circle, panel_binary, panel_lines, panel_candidates, filename)
+    print(f"📊 Final reading: {value}")
+    save_storyboard(panel_circle, panel_binary, panel_lines, panel_candidates, "gauge_input")
 
 
     if SHOW_WINDOWS:
         cv2.destroyAllWindows()
+
+
+    return value
