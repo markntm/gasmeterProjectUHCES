@@ -120,7 +120,7 @@ def calibrate_gauge(gauge_img, zero_angle=0):
 
     # Save + show
     out_cal = Path(filename).with_suffix("").as_posix() + "-calibration.png"
-    cv2.imwrite(out_cal, vis)
+    # cv2.imwrite(out_cal, vis)
     maybe_show("Calibration", vis)
 
 
@@ -153,7 +153,7 @@ def get_current_value(img, x, y, r, tick_list, outname, zero_angle=0):
     panel_binary = cv2.cvtColor(binary_ring, cv2.COLOR_GRAY2BGR)
     cv2.putText(panel_binary, "Preprocessed (binary) for needle", (10, 25),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
-    cv2.imwrite(Path(outname).with_suffix("").as_posix() + "-binary.png", panel_binary)
+    # cv2.imwrite(Path(outname).with_suffix("").as_posix() + "-binary.png", panel_binary)
     maybe_show("Binary", panel_binary)
 
 
@@ -169,7 +169,7 @@ def get_current_value(img, x, y, r, tick_list, outname, zero_angle=0):
             cv2.line(panel_lines, (x1, y1), (x2, y2), (0, 255, 255), 1)
     cv2.putText(panel_lines, "All candidate lines", (10, 25),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2, cv2.LINE_AA)
-    cv2.imwrite(Path(outname).with_suffix("").as_posix() + "-lines.png", panel_lines)
+    # cv2.imwrite(Path(outname).with_suffix("").as_posix() + "-lines.png", panel_lines)
     maybe_show("All Lines", panel_lines)
 
 
@@ -195,7 +195,7 @@ def get_current_value(img, x, y, r, tick_list, outname, zero_angle=0):
             cv2.line(panel_candidates, (L[0], L[1]), (L[2], L[3]), (0, 255, 0), 2)
     cv2.putText(panel_candidates, "Needle-like candidates", (10, 25),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2, cv2.LINE_AA)
-    cv2.imwrite(Path(outname).with_suffix("").as_posix() + "-candidates.png", panel_candidates)
+    # cv2.imwrite(Path(outname).with_suffix("").as_posix() + "-candidates.png", panel_candidates)
     maybe_show("Candidates", panel_candidates)
 
 
@@ -227,7 +227,7 @@ def get_current_value(img, x, y, r, tick_list, outname, zero_angle=0):
 
 
     out_final = Path(outname).with_suffix("").as_posix() + "-needle.png"
-    cv2.imwrite(out_final, vis)
+    # cv2.imwrite(out_final, vis)
     maybe_show("Final", vis)
 
 
@@ -239,14 +239,18 @@ def save_storyboard(panel_circle, panel_binary, panel_lines, panel_candidates, o
     row2 = hstack_same_height(panel_lines, panel_candidates)
     board = vstack_same_width(row1, row2)
     out_story = Path(outname).with_suffix("").as_posix() + "-storyboard.png"
-    cv2.imwrite(out_story, board)
+    # cv2.imwrite(out_story, board)
     maybe_show("Storyboard", board)
 
 
 # ========== MAIN ==========
 
 
-def r_main(gauge_img):
+# @TODO make it so the program takes in a boolean parameter to know which way the arrow turns for readings
+# @TODO future: program still miss-reads the arrows direction, make sure it only reads the longest detection of the arrow
+# @TODO future: take in parameter of previous gauge value to help in reading when between two values
+
+def r_main(gauge_img, counter_clockwise):
     zero_angle = 0 # adjust if the photo is rotated; 0° = up
 
 

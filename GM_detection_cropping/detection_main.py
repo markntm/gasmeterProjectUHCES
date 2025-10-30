@@ -16,7 +16,6 @@ def print_results(result):
                   f"with confidence {pred['confidence']:.2f}")
 
 
-# @TODO make it so it can read a 5 gauge meter
 def filter_y_outliers(boxes, tolerance):
     # Removes boxes whose y1 coordinate is too far from the median y1 value.
     if not boxes:
@@ -26,11 +25,13 @@ def filter_y_outliers(boxes, tolerance):
     return [b for b in boxes if abs(b["y1"] - median_y) <= tolerance]
 
 
+# @TODO find a way so that it only reads the five gauges and place them in the propper order
 def d_main(image_path, y_tolerance_ratio=0.3):
     image = cv2.imread(image_path)
     if image is None:
         raise FileNotFoundError(f"Could not load image: {image_path}")
 
+    # Run API Model
     with open(image_path, "rb") as f:
         response = requests.post(
             API_URL,
@@ -79,7 +80,7 @@ def d_main(image_path, y_tolerance_ratio=0.3):
     for i, b in enumerate(boxes):
         crop = image[b["y1"]:b["y2"], b["x1"]:b["x2"]]
         cropped_gauges.append(crop)
-        cv2.imwrite(f"cropped_gauge_{i}.png", crop)  # optional debug output
+        cv2.imwrite(f"cropped_gauge_{i}.png", crop) # optional debug output
 
     print(f"Detected and cropped {len(cropped_gauges)} gauges.")
     return cropped_gauges
