@@ -228,7 +228,7 @@ def save_storyboard(panel_circle, panel_binary, panel_lines, panel_candidates, o
 # @TODO future: take in parameter of previous gauge value to help in reading when between two values
 
 
-def r_main(gauge_img, counter_clockwise):
+def run_reading(gauge_img, counter_clockwise):
     zero_angle = 0 # adjust if the photo is rotated; 0° = up
 
     calib = calibrate_gauge(gauge_img, zero_angle=zero_angle)
@@ -252,3 +252,16 @@ def r_main(gauge_img, counter_clockwise):
         cv2.destroyAllWindows()
 
     return value
+
+
+def r_main(cropped_gauges):
+    final_reading = 0
+    for i, gauge in enumerate(cropped_gauges):
+        if i > 4:
+            print("ERROR: More than five gauge readings!")
+            break
+        # when increment is even (True), arrow turns counter-clockwise 0, 1, 2, 3, 4
+        reading = run_reading(gauge, (i % 2 == 0))
+        print(f"Reading of Gauge {i + 1}: {reading}.")
+        final_reading += reading * (10 ** (i + 3))
+    return final_reading

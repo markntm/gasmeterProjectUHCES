@@ -62,7 +62,6 @@ def five_gauge_filter(boxes, tolerance):
     return gauges_ordered
 
 
-# @TODO find a way so that it only reads the five gauges and place them in the propper order
 def d_main(image_path, filter_type, y_tolerance_ratio=0.065):
     image = cv2.imread(image_path)
     if image is None:
