@@ -9,24 +9,61 @@ API_URL = f"https://detect.roboflow.com/{GM_ID}"
 
 
 def print_results(result):
-    # Outputting Detection Results
+    """Outputting Detection Results"""
     if "predictions" in result:
         for pred in result["predictions"]:
             print(f"Detected {pred['class']} at ({pred['x']}, {pred['y']}) "
                   f"with confidence {pred['confidence']:.2f}")
 
 
-def filter_y_outliers(boxes, tolerance):
-    # Removes boxes whose y1 coordinate is too far from the median y1 value.
+def four_gauge_filter(boxes, tolerance):
+    """Removes boxes whose y1 coordinate is too far from the median y1 value."""
     if not boxes:
         return []
     y_values = [b["y1"] for b in boxes]
     median_y = sorted(y_values)[len(y_values)//2]
-    return [b for b in boxes if abs(b["y1"] - median_y) <= tolerance]
+    row = [b for b in boxes if abs(b["y1"] - median_y) <= tolerance]
+    return sorted(row, key=lambda b: b["x1"], reverse=True)
+
+
+def sketchy_five_gauge_filter(boxes, tolerance):
+    if not boxes:
+        return []
+    y_values = [b["y1"] for b in boxes]
+    median_y = sorted(y_values)[len(y_values)//2]
+    row = [b for b in boxes if abs(b["y1"] - median_y) <= tolerance]
+    sorted_row = sorted(row, key=lambda b: b["x1"], reverse=True)
+    if len(sorted_row) >= 2:
+        sorted_row[-1], sorted_row[-2] = sorted_row[-2], sorted_row[-1]
+    return sorted_row
+
+
+def five_gauge_filter(boxes, tolerance):
+    if not boxes or len(boxes) < 5:
+        return []
+    y_values = [b["y1"] for b in boxes]
+    median_y = sorted(y_values)[len(y_values)//2]
+    top_row = [b for b in boxes if abs(b["y1"] - median_y) <= tolerance]
+    bottom_row = [b for b in boxes if b["y1"] - median_y > tolerance]
+    if len(top_row) != 4 or len(bottom_row) == 0:
+        # Fallback: if detection is off, return the 5 boxes sorted by x
+        if len(top_row):
+            print("More or less than four gauges detected: Top Row.")
+        else:
+            print("Zero gauges detected: Bottom Row.")
+        return sorted(boxes, key=lambda b: b["x1"])
+
+    top_row_sorted = sorted(top_row, key=lambda b: b["x1"])
+    ten6gauge = top_row_sorted[0]
+    print(ten6gauge["x1"])
+    bottom_gauge = min(bottom_row, key=lambda b: abs(b["x1"] - ten6gauge["x1"]))
+    gauges_ordered = top_row_sorted[::-1].append(bottom_gauge)
+    # gauges_ordered.insert(-1, bottom_gauge)
+    return gauges_ordered
 
 
 # @TODO find a way so that it only reads the five gauges and place them in the propper order
-def d_main(image_path, y_tolerance_ratio=0.3):
+def d_main(image_path, filter_type, y_tolerance_ratio=0.065):
     image = cv2.imread(image_path)
     if image is None:
         raise FileNotFoundError(f"Could not load image: {image_path}")
@@ -66,14 +103,16 @@ def d_main(image_path, y_tolerance_ratio=0.3):
 
     # Filter vertically misaligned detections
     y_tolerance = int(height * y_tolerance_ratio)
-    boxes = filter_y_outliers(boxes, y_tolerance)
+    if filter_type == 5:
+        boxes = five_gauge_filter(boxes, y_tolerance)
+    elif filter_type == 0:
+        boxes = sketchy_five_gauge_filter(boxes, y_tolerance)
+    elif filter_type == 4:
+        boxes = four_gauge_filter(boxes, y_tolerance)
 
     if not boxes:
         print("No horizontally aligned gauges found.")
         return []
-
-    # Sort by x-coordinate (rightmost to leftmost)
-    boxes.sort(key=lambda b: b["x1"], reverse=True)
 
     # Crop gauges
     cropped_gauges = []
