@@ -76,7 +76,7 @@ def d_main(image_path, filter_type, y_tolerance_ratio=0.065):
             files={"file": f},
         )
     result = response.json()
-    print(result)
+    # print(result)
     print_results(result)
 
     predictions = result.get("predictions", [])
@@ -121,5 +121,5 @@ def d_main(image_path, filter_type, y_tolerance_ratio=0.065):
         cropped_gauges.append(crop)
         cv2.imwrite(f"cropped_gauge_{i}.png", crop) # optional debug output
 
-    print(f"Detected and cropped {len(cropped_gauges)} gauges.")
+    print(f"\nDetected and cropped {len(cropped_gauges)} gauges.\n")
     return cropped_gauges
