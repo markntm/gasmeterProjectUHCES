@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import math
 from pathlib import Path
-from GM_sample_images import *
 
 # Toggle this to see GUI windows (handy on a laptop; leave False on a headless Pi)
 SHOW_WINDOWS = False
@@ -96,7 +95,6 @@ def calibrate_gauge(gauge_img, zero_angle=0):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     gray_blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
-
     circles = cv2.HoughCircles(
         gray_blur, cv2.HOUGH_GRADIENT, dp=1.2, minDist=min(h, w)//2,
         param1=120, param2=40,
@@ -106,10 +104,8 @@ def calibrate_gauge(gauge_img, zero_angle=0):
         print("❌ No circle detected.")
         return None
 
-
     a, b, _ = circles.shape
     x, y, r = avg_circles(circles, b)
-
 
     vis = img.copy()
     cv2.circle(vis, (x, y), r, (0, 0, 255), 2)
@@ -117,12 +113,10 @@ def calibrate_gauge(gauge_img, zero_angle=0):
     cv2.putText(vis, "Detected dial circle", (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2, cv2.LINE_AA)
     tick_list = draw_tick_marks(vis, x, y, r, zero_angle=zero_angle)
 
-
     # Save + show
     out_cal = Path(filename).with_suffix("").as_posix() + "-calibration.png"
     # cv2.imwrite(out_cal, vis)
     maybe_show("Calibration", vis)
-
 
     return x, y, r, tick_list, vis
 
@@ -130,25 +124,21 @@ def calibrate_gauge(gauge_img, zero_angle=0):
 def get_current_value(img, x, y, r, tick_list, outname, zero_angle=0):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-
     # Threshold + cleanup
     bin_adapt = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
                                       cv2.THRESH_BINARY_INV, 31, 10)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     binary = cv2.morphologyEx(bin_adapt, cv2.MORPH_OPEN, kernel, iterations=1)
 
-
     # Masks
     hub_mask = np.ones_like(binary) * 255
     cv2.circle(hub_mask, (x, y), int(0.30 * r), 0, -1)
     binary_hub = cv2.bitwise_and(binary, binary, mask=hub_mask)
 
-
     ring_mask = np.zeros_like(binary_hub)
     cv2.circle(ring_mask, (x, y), int(1.15 * r), 255, -1)
     cv2.circle(ring_mask, (x, y), int(0.15 * r), 0, -1)
     binary_ring = cv2.bitwise_and(binary_hub, ring_mask)
-
 
     panel_binary = cv2.cvtColor(binary_ring, cv2.COLOR_GRAY2BGR)
     cv2.putText(panel_binary, "Preprocessed (binary) for needle", (10, 25),
@@ -156,11 +146,9 @@ def get_current_value(img, x, y, r, tick_list, outname, zero_angle=0):
     # cv2.imwrite(Path(outname).with_suffix("").as_posix() + "-binary.png", panel_binary)
     maybe_show("Binary", panel_binary)
 
-
     # Lines
     lines = cv2.HoughLinesP(binary_ring, rho=1, theta=np.pi/180, threshold=60,
                             minLineLength=int(0.20 * r), maxLineGap=6)
-
 
     panel_lines = img.copy()
     if lines is not None:
@@ -171,7 +159,6 @@ def get_current_value(img, x, y, r, tick_list, outname, zero_angle=0):
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2, cv2.LINE_AA)
     # cv2.imwrite(Path(outname).with_suffix("").as_posix() + "-lines.png", panel_lines)
     maybe_show("All Lines", panel_lines)
-
 
     # Filter + score
     candidates = []
@@ -188,7 +175,6 @@ def get_current_value(img, x, y, r, tick_list, outname, zero_angle=0):
             score = length - 8.0 * lc
             candidates.append((score, [x1, y1, x2, y2]))
 
-
     panel_candidates = img.copy()
     if candidates:
         for _, L in candidates:
@@ -198,22 +184,18 @@ def get_current_value(img, x, y, r, tick_list, outname, zero_angle=0):
     # cv2.imwrite(Path(outname).with_suffix("").as_posix() + "-candidates.png", panel_candidates)
     maybe_show("Candidates", panel_candidates)
 
-
     if not candidates:
         print("❌ No needle-like line after scoring.")
         return None, panel_binary, panel_lines, panel_candidates
-
 
     # Best line
     candidates.sort(key=lambda t: -t[0])
     x1, y1, x2, y2 = candidates[0][1]
     tip = (x1, y1) if dist_2_pts(x, y, x1, y1) > dist_2_pts(x, y, x2, y2) else (x2, y2)
 
-
     # Angle-based snapping
     ang = angle_deg_from_center(x, y, tip[0], tip[1])
     value = int((ang + 18.0) // 36.0) % 10
-
 
     # Final overlay
     vis = img.copy()
@@ -225,11 +207,9 @@ def get_current_value(img, x, y, r, tick_list, outname, zero_angle=0):
     cv2.putText(vis, f"Angle: {ang:.1f} deg", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 128, 0), 2, cv2.LINE_AA)
     cv2.putText(vis, f"Reading: {value}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 128, 0), 2, cv2.LINE_AA)
 
-
     out_final = Path(outname).with_suffix("").as_posix() + "-needle.png"
     # cv2.imwrite(out_final, vis)
     maybe_show("Final", vis)
-
 
     return value, panel_binary, panel_lines, panel_candidates
 
@@ -244,21 +224,17 @@ def save_storyboard(panel_circle, panel_binary, panel_lines, panel_candidates, o
 
 
 # ========== MAIN ==========
-
-
-# @TODO make it so the program takes in a boolean parameter to know which way the arrow turns for readings
 # @TODO future: program still miss-reads the arrows direction, make sure it only reads the longest detection of the arrow
 # @TODO future: take in parameter of previous gauge value to help in reading when between two values
 
+
 def r_main(gauge_img, counter_clockwise):
     zero_angle = 0 # adjust if the photo is rotated; 0° = up
-
 
     calib = calibrate_gauge(gauge_img, zero_angle=zero_angle)
     if calib is None:
         return 0
     x, y, r, tick_list, panel_circle = calib
-
 
     value, panel_binary, panel_lines, panel_candidates = get_current_value(
         gauge_img, x, y, r, tick_list, "gauge_input", zero_angle=zero_angle
@@ -267,13 +243,12 @@ def r_main(gauge_img, counter_clockwise):
         print("Could not determine the reading.")
         return 0
 
+    if counter_clockwise:
+        value = 9 - value
 
-    print(f"📊 Final reading: {value}")
     save_storyboard(panel_circle, panel_binary, panel_lines, panel_candidates, "gauge_input")
-
 
     if SHOW_WINDOWS:
         cv2.destroyAllWindows()
-
 
     return value
