@@ -15,7 +15,7 @@ class CameraController:
 
         config = self.picam2.create_still_configuration(main={"size": resolution})
         self.picam2.configure(config)
-        self.picam2 = None #??????????????????
+        self.picam2 = None
 
         print(f"Camera initialized at {resolution[0]}x{resolution[1]}")
 
