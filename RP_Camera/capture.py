@@ -21,14 +21,15 @@ class CameraController:
 
     def capture(self, filename=None):
         """Captures a single image and saves it to a file at 'filename'"""
+        capture_time = datetime.now()
         # Recalls or sets directory to place captured images
         if filename is None:
-            filename = datetime.now().strftime("%Y%m%d_%H%M%S") + ".jpg"
+            filename = capture_time.strftime("%Y%m%d_%H%M%S") + ".jpg"
         filepath = os.path.join(self.save_dir, filename)
 
         self.picam2.capture_file(filepath)
         print(f"Captured image saved at: {filename}")
-        return filepath
+        return filepath, capture_time
 
     def set_resolution(self, width=2592, height=1944):
         """Manually set the resolution of the camera"""
