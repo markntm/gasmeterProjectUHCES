@@ -7,15 +7,15 @@ from secret import *
 # ========== UTILITY FUNCTIONS ==========
 
 
-def add_reading(reading, location="ART-BUILDING", confidence=None, image_path=None, status="success", notes=None):
+def add_reading(reading, timestamp, location="ART-BUILDING", confidence=None, image_path=None, status="success", notes=None):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    timestamp = datetime.now().isoformat(timespec='seconds')
+    formatted_timestamp = timestamp.isoformat(timespec='seconds')
 
     cursor.execute("""
     INSERT INTO readings (timestamp, reading, location, confidence, image_path, status, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (timestamp, reading, location, confidence, image_path, status, notes))
+    """, (formatted_timestamp, reading, location, confidence, image_path, status, notes))
 
     conn.commit()
     conn.close()
