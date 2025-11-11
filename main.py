@@ -2,7 +2,7 @@ from pathlib import Path
 from time import sleep
 import datetime
 
-# from RP_Camera.capture import CameraController
+from RP_Camera.capture import CameraController
 from GM_reading.reading_main import r_main
 from GM_detection_cropping.detection_main import d_main
 from GM_data.db_utilities import *
@@ -14,21 +14,21 @@ debug = False  # output images of the deciphering process
 
 # Define directories
 base_dir = Path(__file__).resolve().parent
-img_dir = base_dir / "GM_sample_images"  # "GM_captured_images" or "GM_sample_images" for testing
+img_dir = base_dir / "GM_captured_images"  # "GM_captured_images" or "GM_sample_images" for testing
 
 
 def reading_loop():
-    # camera = CameraController(save_dir=str(img_dir))
+    camera = CameraController(save_dir=str(img_dir))
 
     try:
-        """camera.start()
+        camera.start()
         filename, capture_time = camera.capture()
-        camera.stop()"""
+        camera.stop()
 
         capture_time = datetime.now()
 
         # Build file path string for processing
-        filepath = img_dir / "GM5.png"  # filename or "GM5.png" for testing
+        filepath = img_dir / filename  # filename or "GM5.png" for testing
         image_path = str(filepath)
 
         # Crops and orders all detected gauges on image
@@ -48,8 +48,7 @@ def reading_loop():
     finally:
         # Ensure camera resources are released properly
         try:
-            # camera.stop()
-            pass
+            camera.stop()
         except Exception:
             pass
 
