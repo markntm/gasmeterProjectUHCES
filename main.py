@@ -8,12 +8,13 @@ if __name__ == "__main__":
     img_dir = base_dir / "GM_sample_images"
     filename = img_dir / "GM5.png"  # <-- put your image path here
     image_path = str(filename)
-    gauge_type = 0
+    gauge_type = 5
+    debug = False
 
     # Crops and orders all detected gauges on image.
-    cropped_gauges = d_main(image_path, gauge_type)
+    cropped_gauges = d_main(image_path, gauge_type, debug)
 
     # Reads each gauge in order.
-    final_reading = r_main(cropped_gauges)
+    final_reading = r_main(cropped_gauges, gauge_type, debug)
 
     print(f"\nFinal reading: {final_reading} Cubic Feet.")

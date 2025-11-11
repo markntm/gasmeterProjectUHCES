@@ -3,9 +3,6 @@ import numpy as np
 import math
 from pathlib import Path
 
-# Toggle this to see GUI windows (handy on a laptop; leave False on a headless Pi)
-SHOW_WINDOWS = False
-
 
 # ========== UTILITY FUNCTIONS ==========
 
@@ -254,10 +251,13 @@ def run_reading(gauge_img, counter_clockwise):
     return value
 
 
-def r_main(cropped_gauges):
+def r_main(cropped_gauges, gauge_type, debug):
+    global SHOW_WINDOWS
+    SHOW_WINDOWS = debug
+
     final_reading = 0
     for i, gauge in enumerate(cropped_gauges):
-        if i > 4:
+        if i > gauge_type - 1:
             print("ERROR: More than five gauge readings!")
             break
         # when increment is even (True), arrow turns counter-clockwise 0, 1, 2, 3, 4

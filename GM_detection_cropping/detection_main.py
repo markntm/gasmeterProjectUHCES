@@ -17,7 +17,7 @@ def print_results(result):
 
 
 def four_gauge_filter(boxes, tolerance):
-    """Removes boxes whose y1 coordinate is too far from the median y1 value."""
+    """Working 4 gauge straight filter: Removes boxes whose y1 coordinate is too far from the median y1 value."""
     if not boxes:
         return []
     y_values = [b["y1"] for b in boxes]
@@ -27,6 +27,7 @@ def four_gauge_filter(boxes, tolerance):
 
 
 def sketchy_five_gauge_filter(boxes, tolerance):
+    """Working 5 gauge filter"""
     if not boxes:
         return []
     y_values = [b["y1"] for b in boxes]
@@ -39,6 +40,7 @@ def sketchy_five_gauge_filter(boxes, tolerance):
 
 
 def five_gauge_filter(boxes, tolerance):
+    """Not working 5 gauge filter"""
     if not boxes or len(boxes) < 5:
         return []
     y_values = [b["y1"] for b in boxes]
@@ -62,7 +64,7 @@ def five_gauge_filter(boxes, tolerance):
     return gauges_ordered
 
 
-def d_main(image_path, filter_type, y_tolerance_ratio=0.065):
+def d_main(image_path, filter_type, debug, y_tolerance_ratio=0.065):
     image = cv2.imread(image_path)
     if image is None:
         raise FileNotFoundError(f"Could not load image: {image_path}")
@@ -103,8 +105,6 @@ def d_main(image_path, filter_type, y_tolerance_ratio=0.065):
     # Filter vertically misaligned detections
     y_tolerance = int(height * y_tolerance_ratio)
     if filter_type == 5:
-        boxes = five_gauge_filter(boxes, y_tolerance)
-    elif filter_type == 0:
         boxes = sketchy_five_gauge_filter(boxes, y_tolerance)
     elif filter_type == 4:
         boxes = four_gauge_filter(boxes, y_tolerance)
@@ -118,7 +118,8 @@ def d_main(image_path, filter_type, y_tolerance_ratio=0.065):
     for i, b in enumerate(boxes):
         crop = image[b["y1"]:b["y2"], b["x1"]:b["x2"]]
         cropped_gauges.append(crop)
-        cv2.imwrite(f"cropped_gauge_{i}.png", crop) # optional debug output
+        if debug:
+            cv2.imwrite(f"cropped_gauge_{i}.png", crop) # optional debug output
 
     print(f"\nDetected and cropped {len(cropped_gauges)} gauges.\n")
     return cropped_gauges
