@@ -12,25 +12,31 @@ class CameraController:
         # Initializes camera
         self.picam2 = Picamera2()
         self.resolution = resolution
+        self.running = False
 
-        # Configue camera for resolution and still image capture
-        config = self.picam2.create_still_configuration(main={"size": resolution})
-        self.picam2.configure(config)
-        self.picam2 = None
-
-        print(f"Camera initialized at {resolution[0]}x{resolution[1]}")
+        print(f"Camera initialized. Set Resolution: {resolution[0]}x{resolution[1]}")
 
     def start(self):
         """Start the camera and capture the image"""
-        if self.picam2 is None:
-            self.picam2 = Picamera2()
-            config = self.picam2.create_still_configuration(main={"size": self.resolution})
+        if not self.running:
+            config = self.picam2.create_still_configuration(main_size=self.resolution)
             self.picam2.configure(config)
             self.picam2.start()
-            print("Camera powered on.")
+            self.running = True
+            print("CAMERA ON.")
+
+    def stop(self):
+        """Stop the camera"""
+        if self.running:
+            self.picam2.stop()
+            self.running = False
+            print("CAMERA OFF.")
 
     def capture(self, filename=None):
         """Captures a single image and saves it to a file at 'filename'"""
+
+        self.start()
+
         capture_time = datetime.now()
         # Recalls or sets directory to place captured images
         if filename is None:
@@ -42,18 +48,17 @@ class CameraController:
             print(f"Created directory: {self.save_dir}")
 
         self.picam2.capture_file(filepath)
-        print(f"Captured image saved at: {filename}")
-        return filepath, capture_time
+        print(f"Captured image saved at: {filepath}")
 
-    def stop(self):
-        """Stop the camera"""
-        if self.picam2:
-            self.picam2.stop()
-            self.picam2 = None
-            print("Camera powered off.")
+        self.stop()
+
+        return filepath, capture_time
 
     def set_resolution(self, width=3280, height=2464):
         """Manually set the resolution of the camera"""
+
+        self.stop()
+
         self.resolution = (width, height)
         self.picam2.stop()
         config = self.picam2.create_still_configuration(main={"size": self.resolution})

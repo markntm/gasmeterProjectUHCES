@@ -21,11 +21,7 @@ def reading_loop():
     camera = CameraController(save_dir=str(img_dir))
 
     try:
-        camera.start()
         filename, capture_time = camera.capture()
-        camera.stop()
-
-        capture_time = datetime.now()
 
         # Build file path string for processing
         filepath = img_dir / filename  # filename or "GM5.png" for testing

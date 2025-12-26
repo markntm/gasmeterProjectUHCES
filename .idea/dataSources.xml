@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="readings.db" uuid="41a4711d-f206-43fd-ac0c-96edcdaed2dd">
+    <data-source source="LOCAL" name="readings" uuid="edee72f4-7388-4a7a-9d6e-47be675c2449">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:\Users\mrmar\IdeaProjects\gasmeterProjectUHCES\GM_data\readings.db</jdbc-url>
-      <jdbc-additional-properties>
-        <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
-      </jdbc-additional-properties>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/GM_data/readings.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
